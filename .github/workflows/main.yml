@@ -79,7 +79,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          # port: ${{ secrets.SSH_PORT }}   # SSH 포트가 22가 아니면 주석 해제
+          port: ${{ secrets.SSH_PORT }}   # SSH 포트가 22가 아니면 주석 해제
           script: |
             mkdir -p "/home/${{ secrets.SSH_USER }}/apps"
 
