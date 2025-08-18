@@ -1,0 +1,93 @@
+/* 바깥 컨테이너 카드 */
+.con {
+  width: 100%;
+  max-width: 1100px; /* 필요하면 조절 */
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.02);
+
+  font-family: "Noto Sans KR", sans-serif;
+}
+
+/* 상단 타이틀 바 */
+.title {
+  padding: 14px 18px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #0f172a;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+/* 프로필 그리드 */
+.profile {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3×3 */
+  gap: 9px 12px; /* row/column gap */
+  padding: 9px 12px;
+  background: #ffffff;
+}
+
+/* 각 항목 칸 */
+.profile > div {
+  display: flex;
+  text-indent: 10px;
+  gap: 6px;
+  min-width: 0; /* 말줄임 대비 */
+  padding: 10px 12px;
+  background: #fcfdff;
+  border: 1px solid #eef2ff;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.profile > div:hover {
+  background: #f6f7fb;
+}
+
+/* 라벨(윗줄) */
+.profile > div > div:first-child {
+  width: 60px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.01em;
+}
+
+/* 값(아랫줄) */
+.profile > div > div:last-child {
+  font-size: 0.95rem;
+  color: #0f172a;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 긴 값은 줄바꿈 허용하고 싶다면 이 클래스 추가해서 사용 */
+.wrap {
+  white-space: normal !important;
+  word-break: break-word;
+}
+
+/* 주소처럼 가로로 넓게 쓰고 싶으면 옵션 (원하면 해당 칸에 className 추가) */
+.span2 {
+  grid-column: span 2;
+}
+.span3 {
+  grid-column: span 3;
+}
+
+/* 반응형: 좁아질수록 컬럼 수 축소 */
+@media (max-width: 1024px) {
+  .profile {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .profile {
+    grid-template-columns: 1fr;
+  }
+}

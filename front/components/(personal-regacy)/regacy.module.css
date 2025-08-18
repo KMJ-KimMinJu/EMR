@@ -1,0 +1,69 @@
+/* 전체 래퍼 */
+.wrap {
+  display: grid;
+  gap: 16px;
+}
+
+/* 섹션 카드(수진/수술, 처방/전실 각각의 블록) */
+.block {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.02);
+  overflow: hidden;
+}
+
+/* 블록 상단 탭바 */
+.tabbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+/* 탭 버튼 (기본) */
+.tab {
+  appearance: none;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    transform 0.03s ease;
+}
+
+.tab:hover {
+  background: #f3f4f6;
+}
+
+.tab:active {
+  transform: translateY(1px);
+}
+
+/* 활성 탭 */
+.active {
+  background: #2563eb;
+  border-color: #1e40af;
+  color: #ffffff;
+}
+
+/* 블록 내용(표 래퍼는 기존 PatientTablecss 사용하므로 여기선 패딩만) */
+.body {
+  padding: 12px;
+}
+
+/* 반응형 여백 */
+@media (max-width: 640px) {
+  .tabbar {
+    flex-wrap: wrap;
+  }
+  .body {
+    padding: 8px;
+  }
+}
