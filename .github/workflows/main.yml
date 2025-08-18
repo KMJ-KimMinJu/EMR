@@ -1,0 +1,185 @@
+name: Deploy monorepo (SSR, partial by folder, with .env write)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'back/**'
+      - 'front/**'
+      - '.github/workflows/main.yml'
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      back_changed: ${{ steps.filter.outputs.back }}
+      front_changed: ${{ steps.filter.outputs.front }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            back:
+              - 'back/**'
+            front:
+              - 'front/**'
+
+  build-back:
+    needs: detect
+    if: needs.detect.outputs.back_changed == 'true'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: back } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'back/package-lock.json'
+      - run: npm ci
+      - run: npm run build || echo "no build step"
+      - run: tar -czf ../back.tgz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: back-dist
+          path: back.tgz
+
+  build-front:
+    needs: detect
+    if: needs.detect.outputs.front_changed == 'true'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: front } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'front/package-lock.json'
+      - run: npm ci
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+      - run: tar -czf ../front.tgz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: front-dist
+          path: front.tgz
+
+  deploy:
+    needs: [detect, build-back, build-front]
+    runs-on: ubuntu-latest
+    if: needs.detect.outputs.back_changed == 'true' || needs.detect.outputs.front_changed == 'true'
+    steps:
+      # 원격 홈에 apps 디렉터리 보장 (scp 전에!)
+      - name: Ensure remote dirs
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          # port: ${{ secrets.SSH_PORT }}   # SSH 포트가 22가 아니면 주석 해제
+          script: |
+            mkdir -p "/home/${{ secrets.SSH_USER }}/apps"
+
+      - if: needs.detect.outputs.back_changed == 'true'
+        uses: actions/download-artifact@v4
+        with: { name: back-dist, path: . }
+
+      - if: needs.detect.outputs.front_changed == 'true'
+        uses: actions/download-artifact@v4
+        with: { name: front-dist, path: . }
+
+      # === BACKEND ===
+      - name: Copy back to server
+        if: needs.detect.outputs.back_changed == 'true'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "back.tgz"
+          target: "/home/${{ secrets.SSH_USER }}/apps/"
+
+      - name: Unpack back & install & write .env & restart (pm2)
+        if: needs.detect.outputs.back_changed == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            BASE="/home/${{ secrets.SSH_USER }}/apps"
+
+            mkdir -p "$BASE/back"
+            tar -xzf "$BASE/back.tgz" -C "$BASE/back"
+
+            cd "$BASE/back"
+
+            # nvm 환경 로드 (있으면)
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+            # pm2 없으면 설치 (nvm 환경에 전역 설치)
+            command -v pm2 >/dev/null 2>&1 || npm i -g pm2
+
+            npm ci --omit=dev
+
+            # .env 작성
+            : > .env
+            PORT_VAL="${{ secrets.BACK_PORT }}"; [ -z "$PORT_VAL" ] && PORT_VAL=15018
+            printf "PORT=%s\n" "$PORT_VAL" >> .env
+            printf "DB_HOST=%s\n"  "${{ secrets.DB_HOST }}"   >> .env
+            printf "DB_USER=%s\n"  "${{ secrets.DB_USER }}"   >> .env
+            printf "DB_PASS=%s\n"  "${{ secrets.DB_PASS }}"   >> .env
+            printf "DB_NAME=%s\n"  "${{ secrets.DB_NAME }}"   >> .env
+            chmod 600 .env
+
+            pm2 restart emr-back || pm2 start "node server.js" --name emr-back
+            pm2 save
+
+      # === FRONTEND (SSR) ===
+      - name: Copy front to server
+        if: needs.detect.outputs.front_changed == 'true'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "front.tgz"
+          target: "/home/${{ secrets.SSH_USER }}/apps/"
+
+      - name: Unpack front & install & restart (pm2)
+        if: needs.detect.outputs.front_changed == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            BASE="/home/${{ secrets.SSH_USER }}/apps"
+
+            mkdir -p "$BASE/front"
+            tar -xzf "$BASE/front.tgz" -C "$BASE/front"
+
+            cd "$BASE/front"
+
+            # nvm/pm2 준비
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+            command -v pm2 >/dev/null 2>&1 || npm i -g pm2
+
+            npm ci --omit=dev
+
+            export NODE_ENV=production
+            export PORT="${{ secrets.FRONT_PORT }}"; [ -z "$PORT" ] && export PORT=3000
+            # SSR에서 런타임 참조가 필요하면 유지. (클라이언트 번들은 빌드 단계에서 이미 주입됨)
+            export NEXT_PUBLIC_API_BASE_URL="${{ secrets.NEXT_PUBLIC_API_BASE_URL }}"
+            [ -z "$NEXT_PUBLIC_API_BASE_URL" ] && export NEXT_PUBLIC_API_BASE_URL="http://127.0.0.1:15018"
+
+            pm2 restart emr-front --update-env || pm2 start "npm -- start -p $PORT" --name emr-front
+            pm2 save
