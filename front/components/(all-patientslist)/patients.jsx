@@ -1,9 +1,8 @@
 import styles from "./patients.module.css";
 
-export default async function Patients() {
+export default function Patients() {
   return (
     <div className={styles.con}>
-      <div>환자 리스트</div>
       <div className={styles.listdiv}>
         <ul>
           <li>

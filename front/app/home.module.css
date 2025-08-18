@@ -15,7 +15,16 @@
   border-right: 1px solid #e5e7eb;
   overflow-y: auto; /* 사이드바 자체 스크롤 */
 }
-
+.sideHeader {
+  width: 100%;
+  height: 40px;
+  display: flex;
+  justify-content: space-evenly;
+}
+.sideHeader > div:first-child {
+  line-height: 40px;
+  text-indent: 20px;
+}
 /* 메인 영역 */
 .main {
   flex: 1;

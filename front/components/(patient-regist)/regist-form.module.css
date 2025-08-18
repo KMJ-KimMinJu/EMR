@@ -1,0 +1,79 @@
+.form {
+  display: grid;
+  gap: 14px;
+  width: 100%; /* ✅ 모달 안에서 꽉 차게 */
+  max-width: none; /* ✅ 고정폭 제거 */
+  margin: 0; /* (선택) 중앙정렬 제거 */
+}
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #0f172a;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #334155;
+}
+
+.input,
+.select {
+  width: 100%; /* ✅ 추가 */
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 9px 12px;
+  outline: none;
+  background: #fff;
+}
+
+.input:focus,
+.select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+}
+
+.error {
+  color: #dc2626;
+  font-size: 0.85rem;
+}
+
+.serverMsg {
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.cancel {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.submit {
+  background: #2563eb;
+  color: #fff;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

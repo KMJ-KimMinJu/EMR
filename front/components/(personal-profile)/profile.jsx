@@ -1,6 +1,6 @@
 import styles from "./profile.module.css";
 
-export default async function Profile() {
+export default function Profile() {
   return (
     <div className={styles.con}>
       <div className={styles.title}>환자 진료정보 조회</div>
