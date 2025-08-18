@@ -1,5 +1,4 @@
 const pool = require("../config/databaseSet");
-import { Connection } from "./../node_modules/mysql2/typings/mysql/index.d";
 
 class PatientRepository {
   async getPatientList() {
