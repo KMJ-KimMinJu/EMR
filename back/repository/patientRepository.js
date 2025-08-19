@@ -2,7 +2,7 @@ const pool = require("../config/databaseSet");
 
 class PatientRepository {
   async getPatientList() {
-    sql = `SELECT * FROM PATIENT`;
+    const sql = `SELECT * FROM PATIENT`;
 
     try {
       const [result] = await pool.query(sql);
@@ -14,7 +14,7 @@ class PatientRepository {
   }
 
   async getPatientDetail(patientId) {
-    sql = `SELECT * FROM PATIENT WHERE patientId = ?`;
+    const sql = `SELECT * FROM PATIENT WHERE patientId = ?`;
 
     try {
       const [result] = await pool.query(sql, patientId);
