@@ -59,6 +59,9 @@ export default function Profile({ patientId }) {
               <div>나이</div>
               <div>{detail.age}</div>
             </div>
+            <div className={`${styles.wrap} ${styles.spanFull}`}>
+              고위험군이다
+            </div>
             <div className={styles.wrap}>
               <div>연락처</div>
               <div>{detail.phone}</div>
