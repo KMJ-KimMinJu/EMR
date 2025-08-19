@@ -20,7 +20,7 @@ export default function Profile({ patientId }) {
         const res = await fetch(
           `http://localhost:4000/api/patient/${patientId}`,
           {
-            cache: "no-store",
+            cache: "force-cache",
           }
         );
         console.log(1);
@@ -49,7 +49,7 @@ export default function Profile({ patientId }) {
           <>
             <div className={styles.wrap}>
               <div>등록번호</div>
-              <div>{detail.registerNo}</div>
+              <div>{detail.patientId}</div>
             </div>
             <div className={styles.wrap}>
               <div>성별</div>
@@ -77,7 +77,7 @@ export default function Profile({ patientId }) {
             </div>
             <div className={styles.wrap}>
               <div>주민번호</div>
-              <div>{detail.ssn}</div>
+              <div>{detail.registration_number}******</div>
             </div>
           </>
         ) : (
