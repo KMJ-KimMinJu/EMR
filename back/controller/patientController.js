@@ -4,6 +4,7 @@ class PatientController {
   async getPatientList(req, res, next) {
     try {
       const patients = await patientService.getPatientList();
+
       res.status(200).json(patients);
     } catch (err) {
       console.error(err);
@@ -21,6 +22,7 @@ class PatientController {
       }
 
       const patient = await patientService.getPatientDetail(patientId);
+      console.log(patient);
       if (!patient) {
         return res.status(404).json({ message: "Patient not found" }); // 404
       }

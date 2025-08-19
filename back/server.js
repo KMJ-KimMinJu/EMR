@@ -6,6 +6,7 @@ const patientRouter = require("./router/patientRouter");
 const predictionRouter = require("./router/predictionRouter");
 
 require("dotenv").config();
+require("./config/detect");
 
 app.use(cors());
 app.use(express.json());

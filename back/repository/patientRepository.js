@@ -7,7 +7,7 @@ class PatientRepository {
     try {
       const [result] = await pool.query(sql);
 
-      return { success: true, patientList: result };
+      return result;
     } catch (error) {
       console.log(error);
     }
@@ -18,7 +18,8 @@ class PatientRepository {
 
     try {
       const [result] = await pool.query(sql, patientId);
-      return { success: true, patientDetail: result };
+
+      return result[0];
     } catch (error) {
       console.log(error);
     }
