@@ -20,7 +20,7 @@ export default function Profile({ patientId }) {
         const res = await fetch(
           `http://localhost:4000/api/patient/${patientId}`,
           {
-            cache: "force-cache",
+            cache: "no-store",
           }
         );
         console.log(1);
@@ -42,7 +42,7 @@ export default function Profile({ patientId }) {
 
     // Express가 4000에서 돌고 있으면 절대경로, Next에서 프록시하면 "/api/stream"로 변경
     const es = new EventSource(
-      `http://localhost:4000/api/stream?patientId=${encodeURIComponent(
+      `http://localhost:4000/api/prediction/stream?patientId=${encodeURIComponent(
         patientId
       )}`
     );
