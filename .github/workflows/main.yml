@@ -89,7 +89,7 @@ jobs:
       - run: pip install -r requirements.txt || echo "no reqs"
       - run: tar -czf fastapi.tgz .
       - uses: actions/upload-artifact@v4
-        with: { name: fastapi-dist, path: back/fastapi/fastapi.tgz }
+        with: { name: fastapi-dist, path: back/fastapi.tgz }
 
         
   deploy-back:
