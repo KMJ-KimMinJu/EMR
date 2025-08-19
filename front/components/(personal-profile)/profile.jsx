@@ -36,7 +36,45 @@ export default function Profile({ patientId }) {
       alive = false;
     };
   }, [patientId]);
+  // 2) SSE 붙이기 (vital/full 콘솔 출력)
+  useEffect(() => {
+    if (!patientId) return;
 
+    // Express가 4000에서 돌고 있으면 절대경로, Next에서 프록시하면 "/api/stream"로 변경
+    const es = new EventSource(
+      `http://localhost:4000/api/stream?patientId=${encodeURIComponent(
+        patientId
+      )}`
+    );
+
+    const onVital = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        console.log("[SSE][VITAL]", msg);
+      } catch (err) {
+        console.warn("VITAL parse error:", err, e.data);
+      }
+    };
+
+    const onFull = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        console.log("[SSE][FULL ]", msg);
+      } catch (err) {
+        console.warn("FULL parse error:", err, e.data);
+      }
+    };
+
+    es.addEventListener("vital", onVital);
+    es.addEventListener("full", onFull);
+    es.onerror = (err) => console.warn("[SSE] error:", err);
+
+    return () => {
+      es.removeEventListener("vital", onVital);
+      es.removeEventListener("full", onFull);
+      es.close();
+    };
+  }, [patientId]);
   return (
     <div className={styles.con}>
       <div className={styles.title}>환자 진료정보 조회</div>
