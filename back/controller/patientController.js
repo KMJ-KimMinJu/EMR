@@ -32,6 +32,8 @@ class PatientController {
   async getPatientDetail(req, res, next) {
     try {
       const { patientId } = req.params;
+
+      console.log(req.params);
       if (!patientId) {
         return res.status(400).json({ message: "patientId is required" });
       }
