@@ -78,18 +78,25 @@ jobs:
     needs: detect
     if: needs.detect.outputs.fastapi_changed == 'true'
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: back/fastapi
+    defaults: { run: { working-directory: back/fastapi } }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
       - run: python -m pip install -U pip
       - run: pip install -r requirements.txt || echo "no reqs"
-      - run: tar -czf fastapi.tgz .
+      - name: Pack fastapi (write tar to parent dir)
+        run: |
+          tar -czf ../fastapi.tgz \
+            --exclude='.venv' \
+            --exclude='__pycache__' \
+            --exclude='*.pyc' \
+            .
       - uses: actions/upload-artifact@v4
-        with: { name: fastapi-dist, path: back/fastapi.tgz }
+        with:
+          name: fastapi-dist
+          # 방금 ../fastapi.tgz 로 만들었으니, 워크스페이스 기준 경로는 이거예요
+          path: back/fastapi.tgz
 
         
   deploy-back:
