@@ -1,27 +1,10 @@
-// const patientService = require("../service/patientService");
+const patientService = require("../service/patientService");
 
 class PatientController {
   async getPatientList(req, res, next) {
     try {
-      // const patients = await patientService.getPatientList();
-      const patients = [
-        {
-          patientId: 1,
-          sex: "F",
-          age: 23,
-          name: "홍길동",
-          birth: "20020129",
-          address: "대충 어디 살고있음",
-        },
-        {
-          patientId: 2,
-          sex: "M",
-          age: 30,
-          name: "김철수",
-          birth: "19950815",
-          address: "알아서 뭐할라고",
-        },
-      ];
+      const patients = await patientService.getPatientList();
+
       res.status(200).json(patients);
     } catch (err) {
       console.error(err);
@@ -35,29 +18,19 @@ class PatientController {
 
       console.log(req.params);
       if (!patientId) {
-        return res.status(400).json({ message: "patientId is required" });
+        return res.status(400).json({ message: "patientId is required" }); // 400
       }
 
-      // const patient = await patientService.getPatientDetail(patientId);
-      const patient = {
-        patientId,
-        sex: "F",
-        age: 23,
-        phone: "010-1234-5678",
-        name: "홍길동",
-        birth: "20020129",
-        address: "부산광역시 해운대구",
-        registration_number: "020129-4",
-      };
-
+      const patient = await patientService.getPatientDetail(patientId);
+      console.log(patient);
       if (!patient) {
-        return res.status(404).json({ message: "Patient not found" });
+        return res.status(404).json({ message: "Patient not found" }); // 404
       }
 
       res.status(200).json(patient);
     } catch (err) {
       console.error(err);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Internal Server Error" }); // 500
     }
   }
 
@@ -66,6 +39,7 @@ class PatientController {
       const { name, birth, age, sex, phone, address, registration_number } =
         req.body;
 
+      // 필수 값 체크 → 400
       if (
         !name ||
         !birth ||
@@ -78,12 +52,7 @@ class PatientController {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      // const created = await patientService.createPatient(req.body);
-      const created = {
-        success: true,
-        patientId: 9999,
-      };
-
+      const created = await patientService.createPatient(req.body);
       res.status(201).json(created);
     } catch (err) {
       console.error(err);
@@ -96,19 +65,14 @@ class PatientController {
       const { id } = req.body;
 
       if (!id) {
-        return res.status(400).json({ message: "id is required" });
+        return res.status(400).json({ message: "id is required" }); // 400
       }
 
-      // const updated = await patientService.updatePatient(req.body);
-      const updated = {
-        success: true,
-        patientId: id,
-      };
-
+      const updated = await patientService.updatePatient(req.body);
       res.status(200).json(updated);
     } catch (err) {
       console.error(err);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Internal Server Error" }); // 500
     }
   }
 }
