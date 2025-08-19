@@ -1,12 +1,14 @@
 /* 전체 레이아웃 */
 .wrap {
   display: flex;
+  padding: 10px;
   height: 100vh; /* 화면 전체 높이 */
   overflow: hidden; /* body 스크롤 막고 내부에서만 스크롤 */
 }
 
 /* 사이드바 */
 .side {
+  padding-top: 16px;
   width: 320px;
   min-width: 280px;
   max-width: 360px;
