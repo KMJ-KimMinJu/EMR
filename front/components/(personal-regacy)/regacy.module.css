@@ -39,7 +39,9 @@
 }
 
 .tab:hover {
-  background: #f3f4f6;
+  background: #2563eb;
+  border-color: #1e40af;
+  color: #ffffff;
 }
 
 .tab:active {

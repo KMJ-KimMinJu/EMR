@@ -12,6 +12,7 @@ import "./global.css";
 export default function Test() {
   // const [open, setOpen] = useState(false);
   const [post, setPost] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState(1);
   // useEffect(() => {
   //   const onKey = (e) => e.key === "Escape" && setOpen(false);
   //   if (open) window.addEventListener("keydown", onKey);
@@ -22,7 +23,6 @@ export default function Test() {
     setPost(false);
   }, []);
   const handlePostClose = useCallback(() => setPost(false), []);
-
   // const handleOpen = useCallback(() => setOpen(true), []);
   // const handleClose = useCallback(() => setOpen(false), []);
   // const handleSuccess = useCallback(() => {
@@ -36,13 +36,11 @@ export default function Test() {
           <div>환자 리스트</div>
           <RegistButton onClick={handlePost} className={styles.button} />
         </div>
-        <Patients />
+        <Patients onSelect={setSelectedPatientId} />
       </div>
-
       <div className={styles.main}>
-        {post == false ? <Profile /> : ""}
-        {post == false ? <Regacy /> : ""}
-
+        {post == false ? <Profile patientId={selectedPatientId} /> : ""}
+        {!post && <Regacy />}
         {/* <Modal open={open} onClose={handleClose}></Modal> */}
         {post == true ? (
           <RegistForm
