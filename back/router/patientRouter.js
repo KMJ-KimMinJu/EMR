@@ -10,7 +10,7 @@ router.get(
 
 //환자 조회
 router.get(
-  "/patient/:patiendId",
+  "/patient/:patientId",
   patientController.getPatientDetail.bind(patientController)
 );
 

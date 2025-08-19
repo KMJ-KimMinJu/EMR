@@ -1,34 +1,53 @@
+// components/(all-patientslist)/patients.jsx
+"use client";
+import { useEffect, useState } from "react";
 import styles from "./patients.module.css";
-
-export async function getPatientAll() {
-  // await new Promise((resolve)=>setTimeout(resolve,1000))
-  const response = await fetch("http://localhost:4000/api/patient/list", {
-    cache: "force-cache",
+export async function getProfile(patientId) {
+  const res = await fetch("http://localhost:4000/api/patient/list", {
+    cache: "no-store",
   });
-  const json = await response.json();
-  console.log("[NETWORK FETCH]");
+  const json = await res.json();
   return json;
 }
-export default async function Patients() {
-  const patients = await getPatientAll();
+export default function Patients({ onSelect }) {
+  const [patients, setPatients] = useState([]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch("http://localhost:4000/api/patient/list", {
+          cache: "no-store",
+        });
+        const json = await res.json();
+        if (alive) setPatients(json);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return (
     <div className={styles.con}>
       <div className={styles.listdiv}>
         <ul>
-          {patients.map((patient) => {
-            <li>
+          {patients.map((p) => (
+            <li key={p.patientId} onClick={() => onSelect?.(p.patientId)}>
               <div>
                 <div>
-                  <span>{patient.name}</span>
+                  <span>{p.name}</span>
                   <span>
-                    {patient.age}/{patient.sex}
+                    {p.age}/{p.sex}
                   </span>
                 </div>
-                <div>{patient.birth}</div>
+                <div>{p.birth}</div>
               </div>
               <div>예측버튼</div>
-            </li>;
-          })}
+            </li>
+          ))}
         </ul>
       </div>
     </div>
