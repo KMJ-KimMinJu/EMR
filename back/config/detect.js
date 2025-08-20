@@ -3,6 +3,17 @@ const axios = require("axios");
 const pool = require("./databaseSet");
 const bus = require("./bus");
 
+(async () => {
+  const [[db]] = await pool.query("SELECT DATABASE() AS db");
+  const [[sv]] = await pool.query("SELECT @@hostname AS host, @@port AS port");
+  console.log("[DB INFO]", sv, db);
+  const [rows] = await pool.query(
+    "SELECT id, source_table, source_pk, patientId, processed FROM inference_queue ORDER BY id DESC LIMIT 10"
+  );
+  console.log("[SAMPLE ROWS]", rows);
+})();
+
+
 // lab 들어왔을 때 함께 보낼 최신 vital의 lookback(분)
 const VITAL_LOOKBACK_MIN = 30;
 
