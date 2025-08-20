@@ -1,9 +1,10 @@
 // components/(all-patientslist)/patients.jsx
 "use client";
 import { useEffect, useState } from "react";
+import { APIADDRESS } from "../../app/apiAddress";
 import styles from "./patients.module.css";
 export async function getProfile(patientId) {
-  const res = await fetch("http://localhost:4000/api/patient/list", {
+  const res = await fetch(`http://${APIADDRESS}:4000/api/patient/list`, {
     cache: "no-store",
   });
   const json = await res.json();
@@ -16,7 +17,7 @@ export default function Patients({ onSelect }) {
     let alive = true;
     (async () => {
       try {
-        const res = await fetch("http://localhost:4000/api/patient/list", {
+        const res = await fetch(`http://${APIADDRESS}:4000/api/patient/list`, {
           cache: "no-store",
         });
         const json = await res.json();

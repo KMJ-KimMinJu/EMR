@@ -2,6 +2,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import styles from "./profile.module.css";
+import { APIADDRESS } from "../../app/apiAddress";
 
 export default function Profile({ patientId }) {
   const [detail, setDetail] = useState(null);
@@ -42,7 +43,7 @@ export default function Profile({ patientId }) {
 
     // Express가 4000에서 돌고 있으면 절대경로, Next에서 프록시하면 "/api/stream"로 변경
     const es = new EventSource(
-      `http://localhost:4000/api/prediction/stream?patientId=${encodeURIComponent(
+      `http://${APIADDRESS}:4000/api/prediction/stream?patientId=${encodeURIComponent(
         patientId
       )}`
     );
