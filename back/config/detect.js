@@ -3,25 +3,6 @@ const axios = require("axios");
 const pool = require("./databaseSet");
 const bus = require("./bus");
 
-(async () => {
-  const [[db]] = await pool.query("SELECT DATABASE() AS db");
-  const [[sv]] = await pool.query("SELECT @@hostname AS host, @@port AS port");
-  console.log("[DB INFO]", sv, db);
-
-  const [q1] = await pool.query(
-    "SELECT id, source_table, source_pk, patientId, processed FROM inference_queue ORDER BY id DESC LIMIT 10"
-  );
-  console.log("[SAMPLE ROWS (latest)]", q1);
-
-  // ✅ 워커가 실제로 집어갈 대상
-  const [q0] = await pool.query(
-    "SELECT id, source_table, source_pk, patientId, processed, (source_pk IS NULL) AS is_null FROM inference_queue WHERE processed=0 ORDER BY id ASC LIMIT 20"
-  );
-  console.log("[CANDIDATES (processed=0)]", q0);
-})();
-
-
-
 // lab 들어왔을 때 함께 보낼 최신 vital의 lookback(분)
 const VITAL_LOOKBACK_MIN = 30;
 
@@ -33,19 +14,18 @@ const FULL_PATH = process.env.FULL_PATH || "/predict/full";
 // ========== 공용 유틸 ==========
 async function fetchBatch() {
   const [rows] = await pool.query(
-    `SELECT * FROM inference_queue
+    `SELECT
+        id,
+        patientId,
+        source_table,
+        source_pk,
+        processed
+     FROM inference_queue
      WHERE processed = 0
      ORDER BY id ASC
      LIMIT 100`
   );
-  return rows.map((r) => ({
-    id: r.id ?? r.ID,
-    patientId: r.patientId ?? r.patient_id ?? r.PATIENTID ?? r.PATIENT_ID,
-    source_table: r.source_table ?? r.sourceTable ?? r.SOURCE_TABLE,
-    source_pk:
-      r.source_pk ?? r.sourcePk ?? r.SOURCE_PK ?? r.source_id ?? r.SOURCE_ID,
-    processed: r.processed ?? r.PROCESSED ?? 0,
-  }));
+  return rows;
 }
 
 async function markProcessed(ids) {
@@ -187,9 +167,9 @@ function buildFullPayload(patientId, l, v /* nullable */) {
 async function tick() {
   const batch = await fetchBatch();
   const doneIds = [];
-  console.log("[tick RAW]", batch[0]);                 // 원시 레코드
-  console.log("[tick KEYS]", Object.keys(batch[0]||{}));
-  
+  console.log("[tick RAW]", batch[0]); // 원시 레코드
+  console.log("[tick KEYS]", Object.keys(batch[0] || {}));
+
   for (const evt of batch) {
     try {
       console.log("[tick]", {
@@ -275,74 +255,3 @@ async function tick() {
 
 setInterval(tick, 700);
 console.log("[worker] started");
-
-// // worker.js (간단 SSE 버전)
-// const pool = require("./databaseSet");
-// const bus = require("./bus");
-
-// // === 유틸 ===
-// async function fetchBatch() {
-//   const [rows] = await pool.query(
-//     `SELECT * FROM inference_queue
-//      WHERE processed = 0
-//      ORDER BY id ASC
-//      LIMIT 100`
-//   );
-//   return rows;
-// }
-
-// async function markProcessed(ids) {
-//   if (!ids.length) return;
-//   await pool.query(
-//     `UPDATE inference_queue SET processed = 1 WHERE id IN (${ids
-//       .map(() => "?")
-//       .join(",")})`,
-//     ids
-//   );
-// }
-
-// // === 메인 루프 ===
-// async function tick() {
-//   const batch = await fetchBatch();
-//   const doneIds = [];
-
-//   for (const evt of batch) {
-//     try {
-//       if (evt.source_table === "patient_vital") {
-//         // ✔ vital 감지 시 프론트로 즉시 알림
-//         bus.emit("vital", {
-//           stage: "vital",
-//           patientId: evt.patientId,
-//           source_table: evt.source_table,
-//           source_pk: evt.source_pk,
-//           at: new Date().toISOString(),
-//         });
-//       } else if (evt.source_table === "patient_lab") {
-//         // ✔ lab 감지 시 프론트로 즉시 알림
-//         bus.emit("full", {
-//           stage: "full",
-//           patientId: evt.patientId,
-//           source_table: evt.source_table,
-//           source_pk: evt.source_pk,
-//           at: new Date().toISOString(),
-//         });
-//       } else {
-//         console.warn("Unknown source_table:", evt.source_table);
-//       }
-
-//       // 처리 완료 표시 (재전송 방지)
-//       doneIds.push(evt.id);
-//     } catch (e) {
-//       console.error(
-//         "[emit error]",
-//         { queue_id: evt.id, src: evt.source_table },
-//         e.message
-//       );
-//     }
-//   }
-
-//   await markProcessed(doneIds);
-// }
-
-// // 주기 실행
-// setInterval(tick, 700);
