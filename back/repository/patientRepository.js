@@ -2,7 +2,7 @@ const pool = require("../config/databaseSet");
 
 class PatientRepository {
   async getPatientList() {
-    const sql = `SELECT patientId, sex, name, age, birth FROM patient`;
+    const sql = `SELECT patientId, sex, name, age, DATE_FORMAT(birth,'%Y-%m-%d') as birth FROM patient`;
 
     try {
       const [result] = await pool.query(sql);
@@ -14,7 +14,7 @@ class PatientRepository {
   }
 
   async getPatientDetail(patientId) {
-    const sql = `SELECT * FROM patient WHERE patientId = ?`;
+    const sql = `SELECT patientId, sex, age, phone, name, DATE_FORMAT(birth,'%Y-%m-%d') as birth, address, registration_number FROM patient WHERE patientId = ?`;
 
     try {
       const [result] = await pool.query(sql, patientId);
@@ -67,9 +67,7 @@ class PatientRepository {
       const [result] = await pool.query(sql, [
         patientData.name,
         // YYYYMMDD → YYYY-MM-DD 변환
-        `${patientData.birth.toString().slice(0, 4)}-${patientData.birth
-          .toString()
-          .slice(4, 6)}-${patientData.birth.toString().slice(6, 8)}`,
+        patientData.birth,
         patientData.age,
         patientData.sex,
         patientData.phone,

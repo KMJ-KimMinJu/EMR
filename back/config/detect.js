@@ -14,7 +14,13 @@ const FULL_PATH = process.env.FULL_PATH || "/predict/full";
 // ========== 공용 유틸 ==========
 async function fetchBatch() {
   const [rows] = await pool.query(
-    `SELECT * FROM inference_queue
+    `SELECT
+        id,
+        patientId,
+        source_table,
+        source_pk,
+        processed
+     FROM inference_queue
      WHERE processed = 0
      ORDER BY id ASC
      LIMIT 100`
@@ -171,11 +177,20 @@ async function tick() {
         patientId: evt.patientId,
       });
 
+      if (evt.source_pk == null) {
+        console.error(
+          "[tick] missing source_pk; columns seen:",
+          Object.keys(evt)
+        );
+        // 무한 재시도 막기 (임시로 버리거나, 별도 테이블로 이동)
+        await markProcessed([evt.id]);
+        continue;
+      }
+
       if (evt.source_table === "patient_vital") {
         // 1차 예측
         const v = await getVitalByPk(evt.source_pk);
         const vitalPayload = buildVitalPayload(evt.patientId, v);
-        console.log("[tick] vital row?", !!v, "pk", evt.source_pk);
         if (!vitalPayload)
           throw new Error("Vital row not found or payload invalid");
 
@@ -237,74 +252,3 @@ async function tick() {
 
 setInterval(tick, 700);
 console.log("[worker] started");
-
-// // worker.js (간단 SSE 버전)
-// const pool = require("./databaseSet");
-// const bus = require("./bus");
-
-// // === 유틸 ===
-// async function fetchBatch() {
-//   const [rows] = await pool.query(
-//     `SELECT * FROM inference_queue
-//      WHERE processed = 0
-//      ORDER BY id ASC
-//      LIMIT 100`
-//   );
-//   return rows;
-// }
-
-// async function markProcessed(ids) {
-//   if (!ids.length) return;
-//   await pool.query(
-//     `UPDATE inference_queue SET processed = 1 WHERE id IN (${ids
-//       .map(() => "?")
-//       .join(",")})`,
-//     ids
-//   );
-// }
-
-// // === 메인 루프 ===
-// async function tick() {
-//   const batch = await fetchBatch();
-//   const doneIds = [];
-
-//   for (const evt of batch) {
-//     try {
-//       if (evt.source_table === "patient_vital") {
-//         // ✔ vital 감지 시 프론트로 즉시 알림
-//         bus.emit("vital", {
-//           stage: "vital",
-//           patientId: evt.patientId,
-//           source_table: evt.source_table,
-//           source_pk: evt.source_pk,
-//           at: new Date().toISOString(),
-//         });
-//       } else if (evt.source_table === "patient_lab") {
-//         // ✔ lab 감지 시 프론트로 즉시 알림
-//         bus.emit("full", {
-//           stage: "full",
-//           patientId: evt.patientId,
-//           source_table: evt.source_table,
-//           source_pk: evt.source_pk,
-//           at: new Date().toISOString(),
-//         });
-//       } else {
-//         console.warn("Unknown source_table:", evt.source_table);
-//       }
-
-//       // 처리 완료 표시 (재전송 방지)
-//       doneIds.push(evt.id);
-//     } catch (e) {
-//       console.error(
-//         "[emit error]",
-//         { queue_id: evt.id, src: evt.source_table },
-//         e.message
-//       );
-//     }
-//   }
-
-//   await markProcessed(doneIds);
-// }
-
-// // 주기 실행
-// setInterval(tick, 700);
