@@ -12,8 +12,9 @@ jobs:
   detect:
     runs-on: ubuntu-latest
     outputs:
-      back_changed: ${{ steps.filter.outputs.back }}
-      front_changed: ${{ steps.filter.outputs.front }}
+      back_changed:     ${{ steps.filter.outputs.back }}
+      front_changed:    ${{ steps.filter.outputs.front }}
+      fastapi_changed:  ${{ steps.filter.outputs.fastapi }}
     steps:
       - uses: actions/checkout@v4
       - id: filter
@@ -22,8 +23,11 @@ jobs:
           filters: |
             back:
               - 'back/**'
+              - '!back/fastapi/**'      # ← FastAPI는 별도 필터로 분리
             front:
               - 'front/**'
+            fastapi:
+              - 'back/fastapi/**'
 
   build-back:
     needs: detect
@@ -69,7 +73,25 @@ jobs:
         with:
           name: front-dist
           path: front.tgz
+          
+  build-fastapi:
+    needs: detect
+    if: needs.detect.outputs.fastapi_changed == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: back/fastapi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: python -m pip install -U pip
+      - run: pip install -r requirements.txt || echo "no reqs"
+      - run: tar -czf fastapi.tgz .
+      - uses: actions/upload-artifact@v4
+        with: { name: fastapi-dist, path: back/fastapi/fastapi.tgz }
 
+        
   deploy-back:
     needs: [detect, build-back]
     runs-on: ubuntu-latest
@@ -191,4 +213,70 @@ jobs:
             [ -z "$NEXT_PUBLIC_API_BASE_URL" ] && export NEXT_PUBLIC_API_BASE_URL="/api"
   
             pm2 restart emr-front --update-env || pm2 start "npm -- start -p $PORT" --name emr-front
+            pm2 save
+            
+  deploy-fastapi:
+    needs: [detect, build-fastapi]
+    runs-on: ubuntu-latest
+    if: needs.detect.outputs.fastapi_changed == 'true' && needs.build-fastapi.result == 'success'
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: fastapi-dist, path: . }
+
+      - name: Ensure remote dirs
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            mkdir -p "/home/${{ secrets.SSH_USER }}/apps"
+
+      - name: Copy fastapi to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "fastapi.tgz"
+          target: "/home/${{ secrets.SSH_USER }}/apps/"
+
+      - name: Unpack & venv & start (pm2+uvicorn)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            BASE="/home/${{ secrets.SSH_USER }}/apps"
+            mkdir -p "$BASE/fastapi"
+            tar -xzf "$BASE/fastapi.tgz" -C "$BASE/fastapi"
+            cd "$BASE/fastapi"
+
+            # pm2 보장
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            command -v pm2 >/dev/null 2>&1 || npm i -g pm2
+
+            # Python/venv
+            command -v python3 >/dev/null 2>&1 || { echo "python3 not found"; exit 1; }
+            python3 -m venv .venv
+            . .venv/bin/activate
+            pip install -U pip
+            if [ -f requirements.txt ]; then
+              pip install -r requirements.txt
+            else
+              pip install "fastapi>=0.110,<1" "uvicorn[standard]>=0.30,<1" "pydantic>=2,<3" "python-dotenv>=1,<2"
+            fi
+
+            PORT=8000
+            pm2 restart emr-fastapi \
+              || pm2 start "bash -lc 'cd $BASE/fastapi && . .venv/bin/activate && uvicorn main:app --host 127.0.0.1 --port $PORT'" --name emr-fastapi
             pm2 save
