@@ -120,7 +120,10 @@ def predict_full(req: FullReq):
 
     diseases = [
         Disease(name="sepsis", percent=92, basis="sbp 250 및 뭐시기"),
+        Disease(name="aki",    percent=75, basis="뭐시기뭐사기 하니까 영상 검사 하aasdfadsfasdfasdfasfasdfasdfasdfasdfasdfasdfadsfasdfaWsdfvadsdfvaWefvaew4fvxzcdvzsef니까"),
         Disease(name="aki",    percent=75, basis="뭐시기뭐사기 하니까 영상 검사 필요"),
+        Disease(name="aki",    percent=75, basis="뭐시기뭐사기 하니까 영상 검사 필요"),
+        Disease(name="aki",    percent=75, basis="뭐시기뭐사기 하aasdfadsfasdfasdfasfasdfasdfasdfasdfasdfasdfadsfasdfaWsdfvadsdfvaWefvaew4fvxzcdvzsef니까 영상 검사 필요"),
     ]
 
     return FullRes(

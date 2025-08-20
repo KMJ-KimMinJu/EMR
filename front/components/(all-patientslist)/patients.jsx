@@ -46,7 +46,6 @@ export default function Patients({ onSelect, refresh = 0 }) {
                 </div>
                 <div>{p.birth}</div>
               </div>
-              <div>예측버튼</div>
             </li>
           ))}
         </ul>

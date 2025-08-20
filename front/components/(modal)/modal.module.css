@@ -1,4 +1,5 @@
-.overlay {
+/* === 기존: 뷰포트 전체 === */
+.overlayFixed {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
@@ -11,14 +12,15 @@
 .dialog {
   background: #fff;
   border-radius: 12px;
-  width: 92vw; /* ✅ 뷰포트 기준 */
-  max-width: 640px; /* ✅ 원하는 최대폭(조절 가능) */
+  width: 92vw;
+  max-width: 640px;
   max-height: 80vh;
   overflow: auto;
-  padding: 16px 20px; /* 내부 여백 */
-  box-sizing: border-box; /* ✅ 패딩 포함 계산 */
+  padding: 16px 20px;
+  box-sizing: border-box;
   position: relative;
 }
+
 .close {
   position: absolute;
   top: 10px;
@@ -27,4 +29,37 @@
   border: none;
   font-size: 20px;
   cursor: pointer;
+}
+
+/* === 추가: 메인 컨테이너 전체 채우기 === */
+.overlayInContainer {
+  position: absolute; /* ✅ 부모(.main)의 position:relative 기준 */
+  width: 100%;
+  inset: 0; /* 부모 영역을 전부 */
+  background: rgba(15, 23, 42, 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40; /* 필요시 조절 (부모 내에서만 레이어링) */
+}
+
+/* 다이얼로그를 컨테이너 가득 채우고 싶을 때 */
+.dialogFill {
+  background: #fff;
+  border-radius: 12px;
+  width: 60%; /* ✅ 가로 꽉 */
+  height: 50%; /* ✅ 세로 꽉 */
+  max-width: none;
+  max-height: none;
+  overflow: auto;
+  padding: 30px 30px;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06),
+    /* 가까운 그림자 */ 0 4px 16px rgba(0, 0, 0, 0.08),
+    /* 중간 그림자 */ 0 8px 24px rgba(0, 0, 0, 0.1); /* 멀리 번지는 그림자 */
 }

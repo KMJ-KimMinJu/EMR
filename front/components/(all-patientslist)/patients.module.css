@@ -100,7 +100,7 @@
   color: #334155;
 }
 
-/* 우측 버튼 영역 */
+/* 우측 버튼 영역
 .listdiv li > div:last-child {
   margin-left: auto;
   flex-shrink: 0;
@@ -113,13 +113,13 @@
   cursor: pointer;
   transition: background 0.15s ease, transform 0.05s ease;
   user-select: none;
-}
-.listdiv li > div:last-child:hover {
+} */
+/* .listdiv li > div:last-child:hover {
   background: #1e40af;
 }
 .listdiv li > div:last-child:active {
   transform: translateY(1px);
-}
+} */
 
 /* 스크롤바 커스텀 */
 .listdiv::-webkit-scrollbar {

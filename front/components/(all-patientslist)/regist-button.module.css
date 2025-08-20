@@ -1,13 +1,16 @@
 .button {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 18px;
-  border-radius: 8px;
-  background: #2563eb; /* 메인 파랑 */
+  align-items: center; /* ✅ 세로 중앙 */
+  justify-content: center; /* ✅ 가로 중앙 */
+  height: 80%;
+  width: 40px; /* 정사각형 버튼이면 width도 주는 게 깔끔 */
+  padding-bottom: 3px;
+  border-radius: 6px;
+  background: #4a75d1;
   color: #fff;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 1.8rem;
+  line-height: 1; /* ✅ 글자가 위아래로 치우치지 않게 */
   border: none;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.1s ease;

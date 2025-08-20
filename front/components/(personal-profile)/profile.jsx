@@ -1,14 +1,14 @@
 // components/(personal-profile)/profile.jsx
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styles from "./profile.module.css";
 import { APIADDRESS } from "../../app/apiAddress";
-
+import Modal from "../(modal)/modal";
 export default function Profile({ patientId }) {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
   const [firstPredict, setFirstPredict] = useState(null);
-  const [secontPredict, setSecondPredict] = useState(null;
+  const [secondPredict, setSecondPredict] = useState(null);
   useEffect(() => {
     // 선택 전이면 비움
     if (!patientId) {
@@ -48,6 +48,7 @@ export default function Profile({ patientId }) {
       try {
         const msg = JSON.parse(e.data);
         console.log("[SSE][VITAL]", msg);
+        setFirstPredict(msg.predict);
       } catch (err) {
         console.warn("VITAL parse error:", err, e.data);
       }
@@ -57,6 +58,8 @@ export default function Profile({ patientId }) {
       try {
         const msg = JSON.parse(e.data);
         console.log("[SSE][FULL ]", msg);
+        setSecondPredict(msg);
+        console.log(msg);
       } catch (err) {
         console.warn("FULL parse error:", err, e.data);
       }
@@ -72,6 +75,18 @@ export default function Profile({ patientId }) {
       es.close();
     };
   }, [patientId]);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    if (open) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+  const handleOpen = useCallback(() => setOpen(true), []);
+  const handleClose = useCallback(() => setOpen(false), []);
+  const handleSuccess = useCallback(() => {
+    setOpen(false);
+  }, []);
   return (
     <div className={styles.con}>
       <div className={styles.title}>환자 진료정보 조회</div>
@@ -94,8 +109,75 @@ export default function Profile({ patientId }) {
               <div>나이</div>
               <div>{detail.age}</div>
             </div>
-            <div className={`${styles.wrap} ${styles.spanFull}`}>
-              고위험군이다
+            <div className={`${styles.predictMsgWrap} ${styles.spanFull}`}>
+              <div
+                className={
+                  firstPredict === "고위험군"
+                    ? styles.firstPredictMsgRed
+                    : styles.firstPredictMsg
+                }
+              >
+                {firstPredict}
+              </div>
+              {secondPredict && (
+                <>
+                  <Modal
+                    open={open}
+                    onClose={handleClose}
+                    scope="container"
+                    fit="fill"
+                    portalTo="#main-modal-root" // ✅ 메인 기준으로 덮음
+                    className={styles.modal} // ✅ 이제 제대로 전달됨
+                  >
+                    <h1 className={styles.predictData}>
+                      {secondPredict.ICU_hours}시간이내에 이송될 확률{" "}
+                      {secondPredict.ICU_percent}%
+                    </h1>
+                    <table className={styles.predictTable}>
+                      <thead>
+                        <tr>
+                          <th>질병명</th>
+                          <th>확률</th>
+                          <th>근거</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {secondPredict?.diseases?.map((d, idx) => (
+                          <tr key={idx}>
+                            <td className={styles.diseaseCell}>{d.name}</td>
+                            <td className={styles.percentCell}>
+                              <div className={styles.percentWrap}>
+                                <div className={styles.percentTrack}>
+                                  <div
+                                    className={styles.percentFill}
+                                    style={{ "--p": `${d.percent ?? 0}%` }}
+                                  />
+                                </div>
+                                <span className={styles.percentText}>
+                                  {d.percent ?? 0}%
+                                </span>
+                              </div>
+                            </td>
+                            <td
+                              className={styles.basisCell}
+                              title={d.basis} /* 전체 내용 툴팁으로 */
+                            >
+                              {d.basis}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </Modal>
+                  <button
+                    className={styles.predictButton}
+                    onClick={() => handleOpen()}
+                  >
+                    {secondPredict.ICU_hours}시간이내에 이송될 확률{" "}
+                    {secondPredict.ICU_percent}%
+                  </button>
+                </>
+              )}
             </div>
             <div className={styles.wrap}>
               <div>연락처</div>
