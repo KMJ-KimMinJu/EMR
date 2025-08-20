@@ -9,6 +9,8 @@ app = FastAPI(title="Predict API", version="1.0.0")
 # 요청 스키마 (워커에서 보내는 필드명과 동일)
 # ======================
 ## test
+## test2
+
 
 class VitalReq(BaseModel):
     patientId: int
