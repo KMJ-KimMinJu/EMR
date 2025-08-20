@@ -1,13 +1,29 @@
-from typing import Optional, List, Literal
+from typing import Dict, Optional, List, Literal
 from datetime import datetime
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 import json
 import numpy as np
 import pandas as pd
+import pickle
 from datetime import datetime
 from tensorflow.keras.models import load_model
 app = FastAPI(title="Predict API", version="1.0.0")
+
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+from keras.models import load_model
+
+# --- N4 내부 레이어/가이드라인 재사용 ---
+# 같은 폴더에 N4.py가 있어야 합니다. (import 시 __main__ 보호되어 main()은 실행되지 않습니다)
+from N4 import FeatureAttention, MMoE, _pick_raw_feature_columns, \
+    sepsis_guideline_evidence_for_row, septic_shock_guideline_evidence_for_row, \
+    dka_guideline_evidence_for_row, aki_guideline_evidence_for_row, \
+    meta_acid_guideline_evidence_for_row, hyperk_guideline_evidence_for_row, \
+    pneumonia_guideline_evidence_for_row, chf_guideline_evidence_for_row, \
+    pulm_edema_guideline_evidence_for_row, mi_udmi_guideline_evidence_for_row
+
 
 # ======================
 # 요청 스키마 (워커에서 보내는 필드명과 동일)
@@ -64,7 +80,6 @@ class VitalPayload(BaseModel):
     milrinone:     Optional[float] = 0
 
 
-
 class FullReq(BaseModel):
     patientId: int
 
@@ -119,6 +134,10 @@ class FullRes(BaseModel):
 
 from datetime import datetime
 
+
+#=================
+#    1차 예측
+#=================
 def to_vital_payload_same(req: "VitalReq") -> "VitalPayload":
     t = req.measured_at or datetime.utcnow()
     iso = t.isoformat()
@@ -138,7 +157,6 @@ def to_vital_payload_same(req: "VitalReq") -> "VitalPayload":
         norepinephrine=0, epinephrine=0, dopamine=0, dobutamine=0,
         phenylephrine=0, vasopressin=0, milrinone=0,
     )
-
 
 # ---------- 2) 전처리: add_time_delta_features와 동일 로직(요약 구현) ----------
 def compute_delta_time_hr(first_time: Optional[str], near_time: Optional[str], delta_time_hr: Optional[float]) -> float:
@@ -185,6 +203,9 @@ def make_features(df: pd.DataFrame) -> pd.DataFrame:
     if "delta_temp" in df: df["flag_worse_fever"]           = (df["delta_temp"] >= 1.0).astype(int)
 
     return df
+#======================================================
+
+
 
 
 # ======================
@@ -195,6 +216,8 @@ def make_features(df: pd.DataFrame) -> pd.DataFrame:
 def health():
     return {"ok": True}
 
+
+# 1차 예측 api
 @app.post("/predict/vital", response_model=VitalRes)
 def predict_vital(req: VitalReq):
 
@@ -227,7 +250,7 @@ def predict_vital(req: VitalReq):
     
     return VitalRes(success=True, predict=predict_res)
 
-
+#2차 예측 api
 @app.post("/predict/full", response_model=FullRes)
 def predict_full(req: FullReq):
     """

@@ -1,0 +1,19 @@
+{
+  "tag_aki": 0.24158591032028198,
+  "tag_alcohol_abuse": 0.38648638129234314,
+  "tag_alcohol_intox": 0.03988471254706383,
+  "tag_chest_pain": 0.06051206216216087,
+  "tag_chf": 0.0639595091342926,
+  "tag_chf_chronic": 0.25315478444099426,
+  "tag_depression": 0.09770938754081726,
+  "tag_dka": 0.11404622346162796,
+  "tag_hf_acute": 0.21452708542346954,
+  "tag_hyperkalemia": 0.1767018735408783,
+  "tag_mi_acute": 0.1316794753074646,
+  "tag_pneumonia": 0.143923819065094,
+  "tag_pulmonary_edema": 0.034852415323257446,
+  "tag_sepsis": 0.177307590842247,
+  "tag_septic_shock": 0.12558847665786743,
+  "tag_shock_general": 0.15146368741989136,
+  "icu_transfer": 0.25596943497657776
+}
