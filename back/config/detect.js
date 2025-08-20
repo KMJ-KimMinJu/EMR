@@ -19,7 +19,14 @@ async function fetchBatch() {
      ORDER BY id ASC
      LIMIT 100`
   );
-  return rows;
+  return rows.map((r) => ({
+    id: r.id ?? r.ID,
+    patientId: r.patientId ?? r.patient_id ?? r.PATIENTID ?? r.PATIENT_ID,
+    source_table: r.source_table ?? r.sourceTable ?? r.SOURCE_TABLE,
+    source_pk:
+      r.source_pk ?? r.sourcePk ?? r.SOURCE_PK ?? r.source_id ?? r.SOURCE_ID,
+    processed: r.processed ?? r.PROCESSED ?? 0,
+  }));
 }
 
 async function markProcessed(ids) {
@@ -170,6 +177,16 @@ async function tick() {
         pk: evt.source_pk,
         patientId: evt.patientId,
       });
+
+      if (evt.source_pk == null) {
+        console.error(
+          "[tick] missing source_pk; columns seen:",
+          Object.keys(evt)
+        );
+        // 무한 재시도 막기 (임시로 버리거나, 별도 테이블로 이동)
+        await markProcessed([evt.id]);
+        continue;
+      }
 
       if (evt.source_table === "patient_vital") {
         // 1차 예측
