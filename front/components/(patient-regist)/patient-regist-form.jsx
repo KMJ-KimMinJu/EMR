@@ -27,7 +27,7 @@ export default function RegistForm({ onSuccess, onCancel }) {
   const onSubmit = async (values) => {
     setServerMsg(null);
     try {
-      const res = await fetch(`http://${APIADDRESS}:4000/api/patient`, {
+      const res = await fetch(`/api/patient`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
