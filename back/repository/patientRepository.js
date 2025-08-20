@@ -35,10 +35,7 @@ class PatientRepository {
     try {
       const [result] = await pool.query(sql, [
         patientData.name,
-        // YYYYMMDD → DATE 로 바꾸기
-        `${patientData.birth.toString().slice(0, 4)}-${patientData.birth
-          .toString()
-          .slice(4, 6)}-${patientData.birth.toString().slice(6, 8)}`,
+        patientData.birth,
         patientData.age,
         patientData.sex,
         patientData.phone,
