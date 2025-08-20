@@ -14,19 +14,18 @@ const FULL_PATH = process.env.FULL_PATH || "/predict/full";
 // ========== 공용 유틸 ==========
 async function fetchBatch() {
   const [rows] = await pool.query(
-    `SELECT * FROM inference_queue
+    `SELECT
+        id,
+        patientId,
+        source_table,
+        source_pk,
+        processed
+     FROM inference_queue
      WHERE processed = 0
      ORDER BY id ASC
      LIMIT 100`
   );
-  return rows.map((r) => ({
-    id: r.id ?? r.ID,
-    patientId: r.patientId ?? r.patient_id ?? r.PATIENTID ?? r.PATIENT_ID,
-    source_table: r.source_table ?? r.sourceTable ?? r.SOURCE_TABLE,
-    source_pk:
-      r.source_pk ?? r.sourcePk ?? r.SOURCE_PK ?? r.source_id ?? r.SOURCE_ID,
-    processed: r.processed ?? r.PROCESSED ?? 0,
-  }));
+  return rows;
 }
 
 async function markProcessed(ids) {
