@@ -7,7 +7,8 @@ import { APIADDRESS } from "../../app/apiAddress";
 export default function Profile({ patientId }) {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const [firstPredict, setFirstPredict] = useState(null);
+  const [secontPredict, setSecondPredict] = useState(null;
   useEffect(() => {
     // 선택 전이면 비움
     if (!patientId) {
