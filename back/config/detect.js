@@ -164,14 +164,23 @@ async function tick() {
 
   for (const evt of batch) {
     try {
+      // console.log("[tick]", {
+      //   id: evt.id,
+      //   src: evt.source_table,
+      //   pk: evt.source_pk,
+      //   patientId: evt.patientId,
+      // });
+
       if (evt.source_table === "patient_vital") {
         // 1차 예측
         const v = await getVitalByPk(evt.source_pk);
         const vitalPayload = buildVitalPayload(evt.patientId, v);
+        // console.log("[tick] vital row?", !!v, "pk", evt.source_pk);
         if (!vitalPayload)
           throw new Error("Vital row not found or payload invalid");
 
         const result = await callVitalAPI(vitalPayload); // { success, predict }
+        // console.log("[vital api result]", result);
         // 프론트가 바로 쓰기 좋게 루트로 펼쳐서 emit
         bus.emit("vital", {
           stage: "vital",
