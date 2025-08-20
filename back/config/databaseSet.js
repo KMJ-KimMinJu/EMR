@@ -13,6 +13,8 @@ const pool = mysql.createPool({
   connectTimeout: 10000, // 10초로 설정
 });
 
+console.log(process.env.DB_HOST, process.env.DB_PORT, process.env.DB_USER, process.env.DB_PASS, process.env.DB_NAME);
+
 pool
   .getConnection()
   .then((conn) => {
