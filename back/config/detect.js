@@ -187,7 +187,9 @@ function buildFullPayload(patientId, l, v /* nullable */) {
 async function tick() {
   const batch = await fetchBatch();
   const doneIds = [];
-
+  console.log("[tick RAW]", batch[0]);                 // 원시 레코드
+  console.log("[tick KEYS]", Object.keys(batch[0]||{}));
+  
   for (const evt of batch) {
     try {
       console.log("[tick]", {
