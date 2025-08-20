@@ -17,7 +17,7 @@ export default function Patients({ onSelect }) {
     let alive = true;
     (async () => {
       try {
-        const res = await fetch(`http://${APIADDRESS}:4000/api/patient/list`, {
+        const res = await fetch(`/api/patient/list`, {
           cache: "no-store",
         });
         const json = await res.json();
