@@ -2,7 +2,7 @@
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import styles from "./regist-form.module.css";
-
+import { APIADDRESS } from "../../app/apiAddress";
 export default function RegistForm({ onSuccess, onCancel }) {
   const {
     register,
@@ -27,7 +27,7 @@ export default function RegistForm({ onSuccess, onCancel }) {
   const onSubmit = async (values) => {
     setServerMsg(null);
     try {
-      const res = await fetch("/api/seven", {
+      const res = await fetch(`http://${APIADDRESS}:4000/api/patient`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
