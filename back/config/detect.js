@@ -3,6 +3,25 @@ const axios = require("axios");
 const pool = require("./databaseSet");
 const bus = require("./bus");
 
+(async () => {
+  const [[db]] = await pool.query("SELECT DATABASE() AS db");
+  const [[sv]] = await pool.query("SELECT @@hostname AS host, @@port AS port");
+  console.log("[DB INFO]", sv, db);
+
+  const [q1] = await pool.query(
+    "SELECT id, source_table, source_pk, patientId, processed FROM inference_queue ORDER BY id DESC LIMIT 10"
+  );
+  console.log("[SAMPLE ROWS (latest)]", q1);
+
+  // ✅ 워커가 실제로 집어갈 대상
+  const [q0] = await pool.query(
+    "SELECT id, source_table, source_pk, patientId, processed, (source_pk IS NULL) AS is_null FROM inference_queue WHERE processed=0 ORDER BY id ASC LIMIT 20"
+  );
+  console.log("[CANDIDATES (processed=0)]", q0);
+})();
+
+
+
 // lab 들어왔을 때 함께 보낼 최신 vital의 lookback(분)
 const VITAL_LOOKBACK_MIN = 30;
 
@@ -167,7 +186,9 @@ function buildFullPayload(patientId, l, v /* nullable */) {
 async function tick() {
   const batch = await fetchBatch();
   const doneIds = [];
-
+  console.log("[tick RAW]", batch[0]);                 // 원시 레코드
+  console.log("[tick KEYS]", Object.keys(batch[0]||{}));
+  
   for (const evt of batch) {
     try {
       console.log("[tick]", {
