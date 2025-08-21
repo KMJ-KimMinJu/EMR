@@ -291,8 +291,8 @@ def predict_full(req: FullReq):
         ] if x is not None
     ]
     base = 50 + min(len(filled_lab_fields) * 6, 30)  # 50~80
-    icu_percent = max(0, min(int(round(base)), 100))
-
+    icu_percent =  43.2
+    
     diseases = [
         Disease(name="DKA", percent=85, basis="β-hydroxybutyrate 5.2 mmol/L, Uketone 3+"),
         Disease(name="Metabolic Acidosis ", percent=33, basis="Anion gap 22.0 mmol/L"),
@@ -302,6 +302,6 @@ def predict_full(req: FullReq):
     return FullRes(
         success=True,
         ICU_percent=icu_percent,
-        ICU_hours=3,
+        ICU_hours=7,
         diseases=diseases
     )
