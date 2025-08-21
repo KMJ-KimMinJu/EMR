@@ -7,22 +7,13 @@ import numpy as np
 import pandas as pd
 import pickle
 from datetime import datetime
-from tensorflow.keras.models import load_model
-app = FastAPI(title="Predict API", version="1.0.0")
+# from tensorflow.keras.models import load_model
+# app = FastAPI(title="Predict API", version="1.0.0")
 
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
-from keras.models import load_model
-
-# --- N4 내부 레이어/가이드라인 재사용 ---
-# 같은 폴더에 N4.py가 있어야 합니다. (import 시 __main__ 보호되어 main()은 실행되지 않습니다)
-from N4 import FeatureAttention, MMoE, _pick_raw_feature_columns, \
-    sepsis_guideline_evidence_for_row, septic_shock_guideline_evidence_for_row, \
-    dka_guideline_evidence_for_row, aki_guideline_evidence_for_row, \
-    meta_acid_guideline_evidence_for_row, hyperk_guideline_evidence_for_row, \
-    pneumonia_guideline_evidence_for_row, chf_guideline_evidence_for_row, \
-    pulm_edema_guideline_evidence_for_row, mi_udmi_guideline_evidence_for_row
+# from fastapi import FastAPI, HTTPException
+# from pydantic import BaseModel, Field
+# from keras.models import load_model
 
 
 # ======================
@@ -32,14 +23,14 @@ from N4 import FeatureAttention, MMoE, _pick_raw_feature_columns, \
 ## test2
 
 # ---------- 0) 로딩 ----------
-MODEL_PATH = "./icu_model.h5"
-COLS_PATH = "./feature_columns.json"
-THR_PATH = "./thresholds.json"
+# MODEL_PATH = "./icu_model.h5"
+# COLS_PATH = "./feature_columns.json"
+# THR_PATH = "./thresholds.json"
 
-model = load_model(MODEL_PATH)
-feature_cols = json.load(open(COLS_PATH, "r"))  # list[str]
-thresholds = json.load(open(THR_PATH, "r"))     # {"icu_transfer": 0.xx}
-THR_ICU = float(thresholds.get("icu_transfer", 0.5))
+# model = load_model(MODEL_PATH)
+# feature_cols = json.load(open(COLS_PATH, "r"))  # list[str]
+# thresholds = json.load(open(THR_PATH, "r"))     # {"icu_transfer": 0.xx}
+# THR_ICU = float(thresholds.get("icu_transfer", 0.5))
 
 class VitalReq(BaseModel):
     patientId: int
@@ -134,7 +125,7 @@ class FullRes(BaseModel):
 
 from datetime import datetime
 
-
+'''
 #=================
 #    1차 예측
 #=================
@@ -204,8 +195,33 @@ def make_features(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 #======================================================
+'''
 
+# 임계치 기반 판정 함수 추가
+def is_high_risk_by_rules(v: VitalReq) -> (bool, List[str]):
+    reasons = []
 
+    # 혈압: SBP < 90 또는 MAP < 65
+    if (v.sbp is not None and v.sbp < 90) or (v.map is not None and v.map < 65):
+        reasons.append("저혈압(SBP<90 또는 MAP<65)")
+
+    # 심박수: HR < 40 또는 > 130
+    if v.heartrate is not None and (v.heartrate < 40 or v.heartrate > 130):
+        reasons.append("심박 이상(HR<40 또는 >130)")
+
+    # 호흡수: RR < 8 또는 > 30
+    if v.resprate is not None and (v.resprate < 8 or v.resprate > 30):
+        reasons.append("호흡수 이상(RR<8 또는 >30)")
+
+    # 산소포화도: SpO2 < 90
+    if v.o2sat is not None and v.o2sat < 90:
+        reasons.append("저산소혈증(SpO2<90%)")
+
+    # 체온: Temp < 35 또는 > 40
+    if v.temperature is not None and (v.temperature < 35 or v.temperature > 40):
+        reasons.append("체온 이상(Temp<35 또는 >40)")
+
+    return (len(reasons) > 0, reasons)
 
 
 # ======================
@@ -221,6 +237,11 @@ def health():
 @app.post("/predict/vital", response_model=VitalRes)
 def predict_vital(req: VitalReq):
 
+    high, reasons = is_high_risk_by_rules(req)
+
+    predict_res = "고위험군" if high else "저위험군"
+    return VitalRes(success=True, predict=predict_res)
+'''
     payload = to_vital_payload_same(req)
 
     # 3-1) 입력 → DF
@@ -251,6 +272,8 @@ def predict_vital(req: VitalReq):
         predict_res = "고위험군"
     
     return VitalRes(success=True, predict=predict_res)
+    '''
+    
 
 #2차 예측 api
 @app.post("/predict/full", response_model=FullRes)
@@ -271,11 +294,9 @@ def predict_full(req: FullReq):
     icu_percent = max(0, min(int(round(base)), 100))
 
     diseases = [
-        Disease(name="sepsis", percent=92, basis="sbp 250 및 뭐시기"),
-        Disease(name="aki",    percent=75, basis="뭐시기뭐사기 하니까 영상 검사 하aasdfadsfasdfasdfasfasdfasdfasdfasdfasdfasdfadsfasdfaWsdfvadsdfvaWefvaew4fvxzcdvzsef니까"),
-        Disease(name="aki",    percent=75, basis="뭐시기뭐사기 하니까 영상 검사 필요"),
-        Disease(name="aki",    percent=75, basis="뭐시기뭐사기 하니까 영상 검사 필요"),
-        Disease(name="aki",    percent=75, basis="뭐시기뭐사기 하aasdfadsfasdfasdfasfasdfasdfasdfasdfasdfasdfadsfasdfaWsdfvadsdfvaWefvaew4fvxzcdvzsef니까 영상 검사 필요"),
+        Disease(name="DKA", percent=85, basis="β-hydroxybutyrate 5.2 mmol/L, Uketone 3+"),
+        Disease(name="Metabolic Acidosis ", percent=33, basis="Anion gap 22.0 mmol/L"),
+        Disease(name="AKI ", percent=19, basis="Creatinine 1.8 mg/dL"),
     ]
 
     return FullRes(
