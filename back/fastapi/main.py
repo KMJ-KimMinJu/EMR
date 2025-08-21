@@ -291,7 +291,7 @@ def predict_full(req: FullReq):
         ] if x is not None
     ]
     base = 50 + min(len(filled_lab_fields) * 6, 30)  # 50~80
-    icu_percent =  43.2
+    icu_percent =  43
     
     diseases = [
         Disease(name="DKA", percent=85, basis="β-hydroxybutyrate 5.2 mmol/L, Uketone 3+"),
