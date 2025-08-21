@@ -1,28 +1,37 @@
 // components/(personal-profile)/profile.jsx
+// components/(personal-profile)/profile.jsx
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import styles from "./profile.module.css";
-import { APIADDRESS } from "../../app/apiAddress";
 import Modal from "../(modal)/modal";
+
 export default function Profile({ patientId }) {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
   const [firstPredict, setFirstPredict] = useState(null);
   const [secondPredict, setSecondPredict] = useState(null);
+
+  // ✅ 현재 SSE 세션 유효성 체크용 토큰
+  const streamTokenRef = useRef(0);
+
+  // ── 1) 상세 조회 ─────────────────────────────────────────
   useEffect(() => {
     // 선택 전이면 비움
     if (!patientId) {
       setDetail(null);
       return;
     }
+
+    // ✅ 환자 변경 시 이전 상세/예측값을 잠깐 비워서 잔상 방지
+    setDetail(null);
+    setFirstPredict(null);
+    setSecondPredict(null);
+
     let alive = true;
     setLoading(true);
     (async () => {
       try {
-        const res = await fetch(`api/patient/${patientId}`, {
-          cache: "no-store",
-        });
-        console.log(1);
+        const res = await fetch(`api/patient/${patientId}`, { cache: "no-store" });
         const json = await res.json();
         if (alive) setDetail(json);
       } catch (e) {
@@ -35,20 +44,31 @@ export default function Profile({ patientId }) {
       alive = false;
     };
   }, [patientId]);
-  // 2) SSE 붙이기 (vital/full 콘솔 출력)
+
+  // ── 2) SSE (vital/full) ─────────────────────────────────
   useEffect(() => {
     if (!patientId) return;
 
-    // Express가 4000에서 돌고 있으면 절대경로, Next에서 프록시하면 "/api/stream"로 변경
+    // ✅ 환자 변경마다 새로운 토큰 발급
+    const myToken = ++streamTokenRef.current;
+
+    // ✅ 환자 변경 시 예측값 초기화 (이 줄이 있어야 이전 값이 안 남음)
+    setFirstPredict(null);
+    setSecondPredict(null);
+
+    // 캐시/프록시 회피를 위해 타임스탬프를 같이 보낼 수도 있음(선택)
     const es = new EventSource(
-      `/api/prediction/stream?patientId=${encodeURIComponent(patientId)}`
+      `/api/prediction/stream?patientId=${encodeURIComponent(patientId)}&t=${Date.now()}`
     );
 
     const onVital = (e) => {
       try {
+        // ✅ 이전 스트림에서 늦게 도착한 이벤트는 무시
+        if (myToken !== streamTokenRef.current) return;
+
         const msg = JSON.parse(e.data);
         console.log("[SSE][VITAL]", msg);
-        setFirstPredict(msg.predict);
+        setFirstPredict(msg.predict ?? null);
       } catch (err) {
         console.warn("VITAL parse error:", err, e.data);
       }
@@ -56,10 +76,12 @@ export default function Profile({ patientId }) {
 
     const onFull = (e) => {
       try {
+        // ✅ 이전 스트림 이벤트 무시
+        if (myToken !== streamTokenRef.current) return;
+
         const msg = JSON.parse(e.data);
         console.log("[SSE][FULL ]", msg);
-        setSecondPredict(msg);
-        console.log(msg);
+        setSecondPredict(msg ?? null);
       } catch (err) {
         console.warn("FULL parse error:", err, e.data);
       }
@@ -70,13 +92,15 @@ export default function Profile({ patientId }) {
     es.onerror = (err) => console.warn("[SSE] error:", err);
 
     return () => {
+      // ✅ 정리: 토큰 그대로 두고 리스너/스트림 종료
       es.removeEventListener("vital", onVital);
       es.removeEventListener("full", onFull);
       es.close();
     };
   }, [patientId]);
-  const [open, setOpen] = useState(false);
 
+  // ── 3) 모달 ─────────────────────────────────────────────
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && setOpen(false);
     if (open) window.addEventListener("keydown", onKey);
@@ -84,9 +108,8 @@ export default function Profile({ patientId }) {
   }, [open]);
   const handleOpen = useCallback(() => setOpen(true), []);
   const handleClose = useCallback(() => setOpen(false), []);
-  const handleSuccess = useCallback(() => {
-    setOpen(false);
-  }, []);
+  const handleSuccess = useCallback(() => setOpen(false), []);
+  
   return (
     <div className={styles.con}>
       <div className={styles.title}>환자 진료정보 조회</div>
