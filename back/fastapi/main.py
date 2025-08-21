@@ -8,7 +8,7 @@ import pandas as pd
 import pickle
 from datetime import datetime
 # from tensorflow.keras.models import load_model
-# app = FastAPI(title="Predict API", version="1.0.0")
+app = FastAPI(title="Predict API", version="1.0.0")
 
 
 # from fastapi import FastAPI, HTTPException
