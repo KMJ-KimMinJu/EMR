@@ -122,7 +122,7 @@ export default function Profile({ patientId }) {
                 ) : firstPredict === "고위험군" ? (
                   firstPredict
                 ) : (
-                  <div className="lowDangerMsg">
+                  <div className={styles.lowDangerMsg}>
                     <div>{firstPredict}</div>
                     <div>지속 모니터링 필요 시 재평가</div>
                   </div>
