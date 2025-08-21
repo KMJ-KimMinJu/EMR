@@ -14,7 +14,7 @@ export default function Test() {
   const [post, setPost] = useState(false);
   const [refresh, setRefresh] = useState(0);
 
-  const [selectedPatientId, setSelectedPatientId] = useState(1);
+  const [selectedPatientId, setSelectedPatientId] = useState(10001);
 
   const handlePost = useCallback(() => setPost(true), []);
   const handlePostSuccess = useCallback(() => {
