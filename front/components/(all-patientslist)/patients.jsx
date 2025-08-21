@@ -10,7 +10,7 @@ export async function getProfile(patientId) {
   const json = await res.json();
   return json;
 }
-export default function Patients({ onSelect }) {
+export default function Patients({ onSelect, refresh = 0 }) {
   const [patients, setPatients] = useState([]);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function Patients({ onSelect }) {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [refresh]);
 
   return (
     <div className={styles.con}>
@@ -46,7 +46,6 @@ export default function Patients({ onSelect }) {
                 </div>
                 <div>{p.birth}</div>
               </div>
-              <div>예측버튼</div>
             </li>
           ))}
         </ul>

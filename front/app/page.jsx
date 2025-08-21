@@ -12,33 +12,30 @@ import "./global.css";
 export default function Test() {
   // const [open, setOpen] = useState(false);
   const [post, setPost] = useState(false);
+  const [refresh, setRefresh] = useState(0);
+
   const [selectedPatientId, setSelectedPatientId] = useState(1);
-  // useEffect(() => {
-  //   const onKey = (e) => e.key === "Escape" && setOpen(false);
-  //   if (open) window.addEventListener("keydown", onKey);
-  //   return () => window.removeEventListener("keydown", onKey);
-  // }, [open]);
+
   const handlePost = useCallback(() => setPost(true), []);
   const handlePostSuccess = useCallback(() => {
     setPost(false);
+    setRefresh((n) => n + 1); // ✅ 신호만 보냄
   }, []);
   const handlePostClose = useCallback(() => setPost(false), []);
-  // const handleOpen = useCallback(() => setOpen(true), []);
-  // const handleClose = useCallback(() => setOpen(false), []);
-  // const handleSuccess = useCallback(() => {
-  //   setOpen(false);
-  // }, []);
 
   return (
     <div className={styles.wrap}>
       <div className={styles.side}>
         <div className={styles.sideHeader}>
-          <div>환자 리스트</div>
+          <div></div>
+          <div className={styles.patientListTitle}>환자 리스트</div>
           <RegistButton onClick={handlePost} className={styles.button} />
         </div>
-        <Patients onSelect={setSelectedPatientId} />
+        <Patients onSelect={setSelectedPatientId} refresh={refresh} />
       </div>
-      <div className={styles.main}>
+      <div
+        className={`${styles.main} ${styles.container} ${styles.modalRoot} `}
+      >
         {post == false ? <Profile patientId={selectedPatientId} /> : ""}
         {!post && <Regacy />}
         {/* <Modal open={open} onClose={handleClose}></Modal> */}
@@ -50,6 +47,7 @@ export default function Test() {
         ) : (
           ""
         )}
+        <div id="main-modal-root" />
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ export default function RegistForm({ onSuccess, onCancel }) {
       sex: "",
       phone: "",
       address: "",
-      registeration_number: "",
+      registration_number: "",
     },
     mode: "onSubmit",
   });
@@ -173,14 +173,14 @@ export default function RegistForm({ onSuccess, onCancel }) {
           <div className={styles.control}>
             <input
               className={styles.input}
-              {...register("registeration_number", {
+              {...register("registration_number", {
                 required: "등록번호는 필수입니다.",
               })}
               placeholder="예: 123456-7890123"
             />
-            {errors.registeration_number && (
+            {errors.registration_number && (
               <p className={styles.error}>
-                {errors.registeration_number.message}
+                {errors.registration_number.message}
               </p>
             )}
           </div>
