@@ -223,9 +223,9 @@ def predict_vital(req: VitalReq):
     predict_res = ''
 
     if label :
-        predict_res = "고위험군"
-    else :
         predict_res = "저위험군"
+    else :
+        predict_res = "고위험군"
     
     return VitalRes(success=True, predict=predict_res)
 
