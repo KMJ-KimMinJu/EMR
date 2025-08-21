@@ -1,0 +1,20 @@
+[
+  "tag_aki",
+  "tag_alcohol_abuse",
+  "tag_alcohol_intox",
+  "tag_chest_pain",
+  "tag_chf",
+  "tag_chf_chronic",
+  "tag_depression",
+  "tag_dka",
+  "tag_hf_acute",
+  "tag_hyperkalemia",
+  "tag_mi_acute",
+  "tag_pneumonia",
+  "tag_pulmonary_edema",
+  "tag_sepsis",
+  "tag_septic_shock",
+  "tag_shock_general",
+  "icu_transfer",
+  "transfer_time"
+]
